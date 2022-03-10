@@ -369,10 +369,15 @@ a {
       <option value="{{row.0}}">{{row.1}}</option>
       {% endfor %}
     </select>
-    <a href="#">View Iternaries</a>
+
+
     <br>
 
+<div id="iternaries">
+  
 
+</div>
+<br>
     <label for="day"><b>Day</b></label>
     <input type="text" placeholder="Enter day" name="day" id="day" required>
 
@@ -412,7 +417,10 @@ a {
 
 <!-- # taken form 'bootstrap jquery cdn' and webpage 'getbootstrap.com' inside it js portion 1st line
  -->
- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+
+ <!-- <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+ -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 <script type="text/javascript">
   $("#view").click(function() {
@@ -421,7 +429,25 @@ a {
 
   function getIternaries(){
     // alert("clicked")
-    var val=document.getElementById("trek").value;
-    alert(val);
+    var trekId=document.getElementById("trek").value;
+    //alert(val);
+   
+    // document.getElementById("view_iternaries_link")
+    //   .href="/iternary/"+val;
+ 
+      $.ajax('/iternary/'+trekId,
+        {
+          success: function (data, status, xhr){
+            //alert("hello :"+data); 
+            $('#iternaries').html(data);
+          } 
+
+        });
+   
+
+
+
   }
+     
+
 </script>

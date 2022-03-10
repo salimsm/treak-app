@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,session,redirect
+from flask import Flask,render_template,request,session,redirect,jsonify
 
 
 from flask_mysqldb import MySQL
@@ -30,6 +30,7 @@ def home():
 	# 	email=session["email"]
 	# return render_template('index.html',email=email)
 	loged_in_user=None
+	userId=None # added by not watching class video 
 	if session.get('email'):
 		loged_in_user=session["email"]
 	if session.get('userId'):
@@ -53,8 +54,8 @@ def doLogin():
 	password=request.form['psw']
 
 	cursor =mysql.connection.cursor()
-	resp=cursor.execute('''SELECT * FROM user WHERE email=%s and password=%s;''',(email,password))
-	#resp=cursor.execute('''SELECT id,email,full_name,password FROM user WHERE email=%s and password=%s;''',(email,password))
+	#resp=cursor.execute('''SELECT * FROM user WHERE email=%s and password=%s;''',(email,password))
+	resp=cursor.execute('''SELECT id,email,full_name,password FROM user WHERE email=%s and password=%s;''',(email,password))
 	
 	#print(resp)
 	#print(type(resp))
@@ -63,11 +64,14 @@ def doLogin():
 	#print(cursor.fetchone())
 	user=cursor.fetchone()
 	cursor.close()
+	print("here is the vlaue of ")
+	print(resp)
 	if resp==1:
 		session['email']=email  
 		session['userId']= user[0]
 		loged_in_user=session.get('email')
-		return render_template('home.html',result={'loged_in_user':loged_in_user})# using dictionary > result={"email":email}  
+		return render_template('home.html',result={'loged_in_user':loged_in_user})
+		# using dictionary > result={"email":email}  
 		# and to get data in html >result.email
 	else:
 		return render_template('login.html',result="Invalid user")
@@ -81,10 +85,10 @@ def doRegister():
 	password=request.form['psw']
 
 	cursor =mysql.connection.cursor()
-	cursor.execute('''INSERT INTO user VALUES(null,%s,%s,%s,%s,%s)''',(full_name,address,email,phone_number,password))
+	cursor.execute('''INSERT INTO user VALUES(null,%s,%s,%s,%s,%s)''',(full_name,email,phone_number,address,password))
 	mysql.connection.commit()
 	cursor.close()
-	return render_template('login.html',resutl="registerd sucessfully, please login to continue")
+	return render_template('login.html',result="registerd sucessfully, please login to continue")
 @app.route('/treaks')
 def allTreaks():
 	#return "i am aon treak listing page"
@@ -216,15 +220,104 @@ def doAddIternary():
 
 	return redirect('/treaks')
 
+
+
+@app.route('/iternary/<int:trekId>')
+def getIternarybyTrekId(trekId):
+	
+
+	cursor=mysql.connection.cursor()
+	cursor.execute('''SELECT * FROM `itenaries` WHERE `trek_destination_id`=%s;''',(trekId,))
+	iternaries=cursor.fetchall()
+	cursor.close()
+	print("here is ////////",trekId)
+	
+	return render_template('iternary.html', result={"trekId":trekId,"iternaries":iternaries})
+
+
+@app.route('/testAjax ')
+def testAjax():
+	return render_template('login.html')
+
+
+
 def __getUserIdByEmail(email):
 	# __ indicates private
 	pass
 
 
-app.run()
-#fdgdfgsfdgsfdgsdgfdsfgsfdh
+'''
+///////////
+api section
+///////////
 
-#
+'''
+
+
+
+@app.route('/api/doRegister',methods=['POST'])
+def doRegisterAPI():
+	
+	full_name=request.form['full_name']
+	email=request.form['email']
+	phone_number=request.form['phone_number']
+	address=request.form['address']
+	password=request.form['psw']
+
+	cursor =mysql.connection.cursor()
+	cursor.execute('''INSERT INTO user VALUES(null,%s,%s,%s,%s,%s)''',(full_name,address,email,phone_number,password))
+	mysql.connection.commit()
+	cursor.close()
+	#return render_template('login.html',result="registerd sucessfully, please login to continue")
+	return jsonify({"result":"registerd sucessfully, please login to continue"})
+	
+	
+
+@app.route('/api/treaks')
+def allTreaksAPI():
+	
+	cursor=mysql.connection.cursor()
+	cursor.execute('''SELECT td.id as 'SNO', td.title as 'Title',td.days as 'Days', td.difficulty as 'Difficulty', td.total_cost as 'Total Cost', td.upvotes as 'Upvotes', u.full_name as 'Full Name' FROM trek_destinations as td JOIN user as u ON td.user_id=u.id;''')
+	treaks=cursor.fetchall()
+	cursor.close()
+
+	loged_in_user=None
+	if session.get('email'):
+		loged_in_user=session['email']
+
+	result={"treaks":treaks,"loged_in_user":loged_in_user}
+	
+	"""
+	return render_template('listing.html', result={"treaks":treaks,"loged_in_user":loged_in_user})
+	"""
+	return jsonify(result)
+
+
+
+@app.route('/api/doLogin',methods=['post'])
+def doLoginAPI():
+
+	email=request.form['email']
+	password=request.form['psw']
+
+	cursor =mysql.connection.cursor()
+	resp=cursor.execute('''SELECT * FROM user WHERE email=%s and password=%s;''',(email,password))
+	
+	user=cursor.fetchone()
+	cursor.close()
+	if resp==1:
+		session['email']=email  
+		session['userId']= user[0]
+		loged_in_user=session.get('email')
+		return jsonify({"result":"sucessfull login"})
+	else:
+		return  jsonify({"result":"login failed, please check your user name and password"})
+
+
+app.run()
+#clear
+
+#/////////////////////////////hhhhhhhhhhhheere
 #21 min iternaries 15 -3
 #
 # 	install pip flask_mysqldb     http://127.0.0.1:5000/login
